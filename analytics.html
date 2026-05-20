@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>IGL HUD - Analytics</title>
+    <style>
+        body{background:#0f0f13;color:#fff;font-family:Segoe UI,Arial;padding:24px}
+        .card{background:#17171b;padding:16px;border-radius:12px;margin-bottom:12px}
+        h2{margin:0 0 12px 0}
+        table{width:100%;border-collapse:collapse;margin-top:8px}
+        th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.04);text-align:left}
+        .muted{color:#a8b0bb;font-size:13px}
+    </style>
+</head>
+<body>
+    <h2>📊 Match Analytics</h2>
+    <div class="card" id="summary_card">Loading summary...</div>
+    <div class="card">
+        <h3>Recent Rounds</h3>
+        <div id="recent_container">Loading rounds...</div>
+    </div>
+    <div class="card">
+        <button id="back_btn">← Back to HUD</button>
+    </div>
+
+    <script>
+        async function loadAnalytics(){
+            try{
+                const res = await fetch('/api/analytics');
+                const data = await res.json();
+                const s = document.getElementById('summary_card');
+                s.innerHTML = `
+                    <div class="muted">Total rounds recorded: ${data.total_rounds}</div>
+                    <div style="font-size:20px;font-weight:700;margin-top:8px">Win %: ${data.win_percentage.toFixed(1)}%</div>
+                    <div class="muted" style="margin-top:6px">Average team spend per round: $${Math.round(data.avg_spend || 0)}</div>
+                    <div style="margin-top:8px">Force plan attempts: ${data.force_attempts} — Win %: ${data.force_win_pct.toFixed(1)}%</div>
+                    <div style="margin-top:4px">Plan-followed attempts: ${data.plan_followed_attempts} — Win %: ${data.plan_followed_win_pct.toFixed(1)}%</div>
+                    <div style="margin-top:8px">Rounds with 4v5 situations: ${data.v45_attempts} — Win %: ${data.v45_win_pct.toFixed(1)}%</div>
+                    <div style="margin-top:4px">Round 2 Force attempts: ${data.round2_force_attempts} — Win %: ${data.round2_force_win_pct.toFixed(1)}%</div>
+                `;
+
+                const rc = document.getElementById('recent_container');
+                if(!data.recent_rounds || data.recent_rounds.length===0){
+                    rc.innerHTML = '<div class="muted">No recent rounds logged.</div>';
+                    return;
+                }
+                let html = '<table><thead><tr><th>Round</th><th>Result</th><th>Plan</th><th>Spent</th><th>Min Alive</th><th>End Alive</th><th>Purchases</th></tr></thead><tbody>';
+                for(const r of data.recent_rounds){
+                    const purchases = (r.purchases || []).map(p => `${p.player}: $${p.spent} ${p.weapon_to ? '-> '+p.weapon_to : ''}`).join('<br>');
+                    html += `<tr><td>${r.round}</td><td>${r.result}</td><td>${r.plan_summary}</td><td>$${r.team_spent}</td><td>${r.min_team_alive ?? ''}</td><td>${r.end_team_alive ?? ''}</td><td>${purchases}</td></tr>`;
+                }
+                html += '</tbody></table>';
+                rc.innerHTML = html;
+
+            }catch(e){
+                document.getElementById('summary_card').innerText = 'Failed to load analytics: '+e;
+            }
+        }
+        document.getElementById('back_btn').addEventListener('click', ()=>window.location.href='/');
+        loadAnalytics();
+    </script>
+</body>
+</html>

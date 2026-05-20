@@ -1,0 +1,32 @@
+# Database and config
+rounds.db
+scout_config.json
+
+# Old history files
+cs2_history_*.txt
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# PyInstaller
+*.spec
+cs2scout.exe
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp

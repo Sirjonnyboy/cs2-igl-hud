@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CS2 Multiplayer IGL Hub</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            display: flex;
+            justify-content: center;
+            padding: 30px 20px;
+        }
+        .container {
+            width: 960px;
+            max-width: 100%;
+            background: #1e1e1e;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0px 8px 24px rgba(0,0,0,0.45);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 12px;
+            margin-bottom: 24px;
+        }
+        .card {
+            background: #232323;
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 18px;
+            border-left: 5px solid #555;
+        }
+        .card.enemy { border-color: #ff4757; }
+        .card.plan { border-color: #ffb142; }
+        .card.team { border-color: #3742fa; }
+        h3 {
+            margin: 0 0 12px 0;
+            color: #cccccc;
+            text-transform: uppercase;
+            font-size: 13px;
+            letter-spacing: 0.06em;
+        }
+        .big-text {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .subtext {
+            color: #a8b0bb;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .alert-text {
+            color: #ffa502;
+            font-weight: 700;
+            text-align: center;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+        .team-plan-text {
+            font-size: 16px;
+            line-height: 1.65;
+            color: #e4e6eb;
+        }
+        .plan-breakdown,
+        .plan-support {
+            color: #a8b0bb;
+            font-size: 13px;
+            margin-top: 10px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+        .plan-support {
+            margin-top: 14px;
+            color: #dcdfe8;
+        }
+        .live-card {
+            display: none;
+        }
+        .history-grid {
+            display: grid;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .history-entry {
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.02);
+        }
+        .history-entry.green { border-color: rgba(46,213,115,0.25); background: rgba(46,213,115,0.08); }
+        .history-entry.red { border-color: rgba(255,71,87,0.25); background: rgba(255,71,87,0.08); }
+        .history-entry.yellow { border-color: rgba(255,189,89,0.25); background: rgba(255,189,89,0.08); }
+        .history-entry.orange { border-color: rgba(255,159,67,0.25); background: rgba(255,159,67,0.08); }
+        .history-entry.grey { border-color: rgba(153,153,153,0.25); background: rgba(153,153,153,0.08); }
+        .history-entry strong {
+            display: block;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+        .history-entry small {
+            color: #a8b0bb;
+            display: block;
+            margin-top: 4px;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .roster-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 14px;
+            margin-top: 12px;
+        }
+        .player-card {
+            background: #1c1c1c;
+            border: 1px solid #2f2f2f;
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+        }
+        .player-name {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        .player-money {
+            color: #2ed573;
+            font-weight: 700;
+        }
+        .player-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+            color: #a8b0bb;
+            font-size: 13px;
+        }
+        .player-meta span {
+            background: rgba(255,255,255,0.04);
+            padding: 6px 10px;
+            border-radius: 10px;
+        }
+        .player-suggestion {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #f5f6fa;
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .grenade-pill {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.03);
+            color: #dfe6e9;
+            font-weight: 700;
+            font-size: 12px;
+            margin-right: 6px;
+        }
+        .status-pill {
+            font-weight: 700;
+            padding: 6px 10px;
+            border-radius: 999px;
+            display: inline-block;
+            font-size: 12px;
+        }
+        .status-good { background: rgba(46,213,115,0.12); color: #2ed573; }
+        .status-warning { background: rgba(255,71,87,0.12); color: #ff4757; }
+        .health-row {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .health-line {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .health-label {
+            color: #a8b0bb;
+            font-size: 13px;
+            min-width: 50px;
+        }
+        .health-bar-bg {
+            width: 100%;
+            flex: 1;
+            height: 12px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .health-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #2ed573, #1dd1a1);
+        }
+        .kit-pill {
+            font-weight: 700;
+            padding: 6px 10px;
+            border-radius: 999px;
+            display: inline-block;
+            font-size: 12px;
+        }
+        .kit-good { background: rgba(46,213,115,0.12); color: #2ed573; }
+        .kit-bad { background: rgba(255,71,87,0.12); color: #ff4757; }
+        .placeholder {
+            color: #7d7d7d;
+            font-style: italic;
+            margin-top: 16px;
+        }
+        @media (max-width: 860px) {
+            .player-card { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>🎯 CS2 Multiplayer IGL Hub</h2>
+            <span style="color: #888;">Round <span id="round">0</span> | Team: <span id="team">WAITING</span></span>
+        </div>
+
+        <div class="card enemy">
+            <h3>🛑 Enemy Tracker</h3>
+            <div class="big-text">Est. Bank: $<span id="enemy_money">800</span></div>
+            <div id="enemy_suggestion" class="subtext">🟢 ECO EXPECTED</div>
+        </div>
+
+        <div id="team_plan_card" class="card plan">
+            <h3>📋 Team Buy Plan</h3>
+            <div id="team_plan" class="team-plan-text">Waiting for team buy plan...</div>
+            <div id="team_plan_support" class="plan-support"></div>
+            <div id="team_plan_breakdown" class="plan-breakdown"></div>
+            <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
+                <label style="color:#a8b0bb;font-size:13px">Reserve per player:</label>
+                <input id="reserve_input" type="number" min="0" step="50" style="width:100px;padding:6px;border-radius:8px;border:none;background:#0f1113;color:#fff" />
+                <button id="reserve_set" style="padding:6px 10px;border-radius:8px;border:none;background:#2f3542;color:#fff;cursor:pointer">Set</button>
+                <a href="/analytics" style="margin-left:auto;color:#fff;background:#222;padding:6px 10px;border-radius:8px;text-decoration:none">Analytics</a>
+            </div>
+        </div>
+
+        <div id="live_phase_card" class="card live-card">
+            <h3>🚨 Live Round Visualizer</h3>
+            <div id="live_phase_text" class="subtext">Live phase active. Showing player health and defuse-kit status.</div>
+        </div>
+
+        <div class="card team">
+            <div class="player-name">
+                <div>
+                    <h3>🤝 Live Team Roster</h3>
+                </div>
+                <div id="team_bank_container" class="player-money">Total Bank: $<span id="team_bank">0</span></div>
+            </div>
+            <div id="roster_grid" class="roster-grid">
+                <div class="placeholder">Waiting for players to connect... Boot a match and the roster will populate here.</div>
+            </div>
+        </div>
+
+        <div class="card history">
+            <h3>📈 Round Purchase History</h3>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <div style="font-size:13px;color:#a8b0bb;">Default: Detailed View</div>
+                <button id="history_toggle" style="background:#2f3542;color:#fff;border-radius:8px;padding:6px 10px;border:none;cursor:pointer;">Toggle Concise</button>
+            </div>
+            <div id="history_grid" class="history-grid">
+                <div class="placeholder">No round history yet.</div>
+            </div>
+        </div>
+
+        <div class="alert-text" id="alert">Waiting for match data...</div>
+    </div>
+
+    <script>
+        setInterval(async () => {
+            try {
+                const response = await fetch('/data');
+                const data = await response.json();
+
+                document.getElementById('round').innerText = data.round;
+                document.getElementById('team').innerText = data.team;
+                document.getElementById('enemy_money').innerText = data.enemy_money;
+                document.getElementById('enemy_suggestion').innerText = data.enemy_suggestion;
+                const isBuyPhase = data.phase === 'freezetime';
+                const isLivePhase = data.phase && data.phase !== 'freezetime' && data.phase !== 'waiting';
+                document.getElementById('team_bank').innerText = data.team_bank;
+                document.getElementById('team_plan').innerText = data.team_plan || 'Waiting for team buy plan...';
+                document.getElementById('team_plan_support').innerText = data.team_plan_support || '';
+                document.getElementById('team_plan_breakdown').innerText = data.team_plan_breakdown || '';
+                if (document.getElementById('reserve_input')) document.getElementById('reserve_input').value = data.suggestion_reserve_per_player || 800;
+                document.getElementById('alert').innerText = data.alert;
+                document.getElementById('live_phase_card').style.display = isLivePhase ? 'block' : 'none';
+
+                const rosterGrid = document.getElementById('roster_grid');
+                rosterGrid.innerHTML = '';
+
+                if (!data.team_roster || Object.keys(data.team_roster).length === 0) {
+                    rosterGrid.innerHTML = '<div class="placeholder">Waiting for players to connect... Boot a match and the roster will populate here.</div>';
+                    return;
+                }
+
+                for (const [playerName, stats] of Object.entries(data.team_roster)) {
+                    const weapon = stats.weapon || 'Pistol';
+                    const hp = stats.health ?? 0;
+                    const hasKit = Boolean(stats.has_kit);
+
+                    if (isBuyPhase) {
+                        let statusClass = 'status-good';
+                        if (stats.armor_status.includes('BUY')) statusClass = 'status-warning';
+                        const buyYourself = stats.suggestion_buy || stats.suggestion || 'Hold';
+                        const buyFor = stats.suggestion_for || '';
+
+                        const playerHtml = `
+                            <div class="player-card">
+                                <div class="player-name">
+                                    <span>${playerName}</span>
+                                    <span class="player-money">$${stats.money}</span>
+                                </div>
+                                <div class="player-meta">
+                                    <span>${weapon}</span>
+                                    <span class="status-pill ${statusClass}">${stats.armor_status}</span>
+                                    <div style="display:flex;gap:6px;align-items:center;">
+                                        ${(stats.grenades || []).map(g => `<span class="grenade-pill">${g}</span>`).join('')}
+                                    </div>
+                                </div>
+                                <div class="player-suggestion">
+                                    <div><strong>Buy yourself:</strong> ${buyYourself}</div>
+                                    ${buyFor ? `<div><strong>${buyFor}</strong></div>` : ''}
+                                </div>
+                            </div>
+                        `;
+                        rosterGrid.insertAdjacentHTML('beforeend', playerHtml);
+                    } else {
+                        const kitClass = hasKit ? 'kit-good' : 'kit-bad';
+                        const healthWidth = Math.max(0, Math.min(100, hp));
+                        const playerHtml = `
+                            <div class="player-card">
+                                <div class="player-name">
+                                    <span>${playerName}</span>
+                                    <span class="player-money">${hp} HP</span>
+                                </div>
+                                <div class="player-meta">
+                                    <span>${weapon}</span>
+                                    <span class="kit-pill ${kitClass}">${hasKit ? 'Defuse Kit' : 'No Kit'}</span>
+                                    <div style="display:flex;gap:6px;align-items:center;">
+                                        ${(stats.grenades || []).map(g => `<span class="grenade-pill">${g}</span>`).join('')}
+                                    </div>
+                                </div>
+                                <div class="health-row">
+                                    <div class="health-line">
+                                        <span class="health-label">Health</span>
+                                        <div class="health-bar-bg"><div class="health-bar-fill" style="width: ${healthWidth}%;"></div></div>
+                                    </div>
+                                    <div class="health-line">
+                                        <span class="health-label">Status</span>
+                                        <span class="status-pill ${stats.alive ? 'status-good' : 'status-warning'}">${stats.alive ? 'Alive' : 'Dead'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        rosterGrid.insertAdjacentHTML('beforeend', playerHtml);
+                    }
+                }
+
+                const historyGrid = document.getElementById('history_grid');
+                historyGrid.innerHTML = '';
+                if (!data.purchase_history || data.purchase_history.length === 0) {
+                    historyGrid.innerHTML = '<div class="placeholder">No round history yet.</div>';
+                } else {
+                    for (const entry of data.purchase_history) {
+                        let historyHtml = '';
+                        if (window._historyConcise) {
+                            historyHtml = `
+                                <div class="history-entry ${entry.status}">
+                                    <strong>Round ${entry.round} — ${entry.result.toUpperCase()}</strong>
+                                    <div>Spent: $${entry.team_spent} — ${entry.plan_summary}</div>
+                                </div>
+                            `;
+                        } else {
+                            historyHtml = `
+                                <div class="history-entry ${entry.status}">
+                                    <strong>Round ${entry.round} — ${entry.result.toUpperCase()}</strong>
+                                    <div>${entry.plan_summary}</div>
+                                    <small>Bank before: $${entry.team_bank_before}, after: $${entry.team_bank_after}, spent: $${entry.team_spent}</small>
+                                    <small>${entry.player_purchases.join(' · ')}</small>
+                                </div>
+                            `;
+                        }
+                        historyGrid.insertAdjacentHTML('beforeend', historyHtml);
+                    }
+                }
+                // Initialize history toggle state and listener once
+                if (typeof window._historyConcise === 'undefined') {
+                    window._historyConcise = false; // default detailed
+                    const historyToggleBtn = document.getElementById('history_toggle');
+                    if (historyToggleBtn) {
+                        historyToggleBtn.addEventListener('click', () => {
+                            window._historyConcise = !window._historyConcise;
+                            historyToggleBtn.innerText = window._historyConcise ? 'Toggle Detailed' : 'Toggle Concise';
+                        });
+                    }
+                    // Reserve set handler (init once)
+                    const reserveSetBtn = document.getElementById('reserve_set');
+                    if (reserveSetBtn) {
+                        reserveSetBtn.addEventListener('click', async () => {
+                            const val = parseInt(document.getElementById('reserve_input').value || '800');
+                            try {
+                                await fetch('/set_reserve', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({reserve: val})});
+                                alert('Reserve set to $'+val);
+                            } catch(e) { alert('Failed to set reserve: '+e); }
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching data from Python server:', error);
+            }
+        }, 500);
+    </script>
+</body>
+</html>
