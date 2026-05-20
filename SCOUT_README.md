@@ -24,6 +24,37 @@ Scout is a lightweight Python application that runs on each player's machine and
    python Scout.py
    ```
 
+> Note: Only the server host needs to run `Main.py`. If you are not the server owner, just run `Scout.py`.
+
+### Game State Integration config
+
+Scout checks for `gamestate_integration_python.cfg` in the CS:GO cfg folder and will create it if missing. This file should live in:
+
+`C:\Steam\steamapps\common\Counter-Strike Global Offensive\game\csgo\cfg`
+
+The file contents should be:
+
+```text
+"Game State Integration"
+{
+    "uri" "http://127.0.0.1:22222"
+    "timeout" "5.0"
+    "buffer"  "0.1"
+    "throttle" "0.5"
+    "heartbeat" "60.0"
+    "data"
+    {
+        "provider"            "1"
+        "map"                 "1"
+        "round"               "1"
+        "player_id"           "1"
+        "player_state"        "1"
+        "player_weapons"      "1"
+        "player_match_stats"  "1"
+    }
+}
+```
+
 ### For Distribution (Building as EXE)
 
 1. Install PyInstaller:

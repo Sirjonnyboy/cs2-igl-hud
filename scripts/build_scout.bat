@@ -17,7 +17,7 @@ if %ERRORLEVEL% NEQ 0 (
 
 echo.
 echo [*] Building Scout.exe...
-pyinstaller --onefile --windowed --icon=scout.ico --name "CS2Scout" --add-data "scout_config.json:." Scout.py
+pyinstaller --onefile --windowed --icon=scout.ico --name "CS2Scout" Scout.py
 
 if %ERRORLEVEL% EQU 0 (
     echo.

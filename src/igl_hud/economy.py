@@ -1,4 +1,4 @@
-from logger import write_to_log
+from .logger import write_to_log
 
 class CS2EconomyTracker:
     def __init__(self):
