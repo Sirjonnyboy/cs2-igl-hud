@@ -1,24 +1,22 @@
 # IGL HUD
 
-IGL HUD is a multiplayer CS2 IGL dashboard that collects game data from teammates and displays it in a lightweight browser UI.
+IGL HUD is a CS2 IGL dashboard that collects game data from teammates and yourself and displays it in a lightweight browser UI to help with ingame Economy managment. 
 
 ## Quick start
 
-### Use the packaged executables
+### Use the packaged executable
 
-- `dist\IGLHUD.exe` - HUD server executable for the match host.
-- `dist\CS2Scout.exe` - Scout forwarder executable for teammates.
+- `dist\IGLHUD.exe` - Single executable that can run as host, scout, or both.
 
-### Run the HUD
+### Run the app
 
-1. Start `IGLHUD.exe` on the host machine.
-2. Open `http://localhost:22222` in your browser.
+1. Run `dist\IGLHUD.exe`.
+2. Choose whether to run as the HUD host, a Scout forwarder, or both.
+	- If you pick *Both*, the app will start the server and run the scout locally (teammates don't need to run a separate executable).
 
-### Run the Scout
+When running as the HUD host, the application will attempt to auto-create a `gamestate_integration_python.cfg` in your CS2 `cfg` folder if one is not already present, so the host does not need to run the scout separately.
 
-1. Start `CS2Scout.exe` on teammate machines.
-2. Enter the host IP when prompted.
-3. Scout will forward CS2 GSI data to the host HUD.
+If you prefer separate binaries, `scripts\build_scout.bat` can still build `CS2Scout.exe`.
 
 ## If you want to run from source
 
