@@ -17,7 +17,14 @@ if %ERRORLEVEL% NEQ 0 (
 
 echo.
 echo [*] Building Scout.exe...
-pyinstaller --onefile --windowed --icon=scout.ico --name "CS2Scout" Scout.py
+
+REM Ensure we run from repository root so relative paths resolve correctly
+SET SCRIPT_DIR=%~dp0
+PUSHD "%SCRIPT_DIR%.."
+
+python -m PyInstaller --onefile --paths src --name "CS2Scout" Scout.py
+
+POPD
 
 if %ERRORLEVEL% EQU 0 (
     echo.
