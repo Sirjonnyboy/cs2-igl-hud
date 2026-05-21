@@ -11,6 +11,7 @@ This repository contains two main components:
 - `Scout.py` - root entrypoint for the scout forwarder.
 - `requirements.txt` - Python dependencies.
 - `scripts/build_scout.bat` - build script for packaging `Scout.py`.
+ - `scripts/build_main.bat` - build script for packaging `Main.py`.
 - `src/igl_hud/` - HUD backend package:
   - `server.py` - server logic and API handlers.
   - `logger.py` - logging and database persistence.
@@ -35,6 +36,27 @@ This repository contains two main components:
    ```powershell
    python Scout.py
    ```
+
+## Build standalone Windows executables
+
+This repository can be packaged into `.exe` files so end users do not need a Python installation.
+
+1. Install packaging dependencies:
+   ```powershell
+   pip install -r requirements.txt
+   ```
+
+2. Build the HUD server executable:
+   ```powershell
+   scripts\build_main.bat
+   ```
+
+3. Build the scout forwarder executable:
+   ```powershell
+   scripts\build_scout.bat
+   ```
+
+The created `.exe` files will be available in the `dist\` folder.
 
 ## Who runs what
 
