@@ -1,9 +1,18 @@
 import os
+import sys
 import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from .logger import write_to_log, log_round_entry
 import sqlite3
 from .economy import CS2EconomyTracker
+
+
+def get_resource_path(relative_path):
+    if getattr(sys, 'frozen', False):
+        base_path = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+    else:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_path, relative_path)
 
 # ==========================================
 # 1. THE MULTIPLAYER DASHBOARD STATE
@@ -586,8 +595,7 @@ class GSIRequestHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-type', 'text/html; charset=utf-8')
             self.end_headers()
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            html_path = os.path.join(current_dir, "analytics.html")
+            html_path = get_resource_path("analytics.html")
             try:
                 with open(html_path, "r", encoding="utf-8") as f:
                     html = f.read()
@@ -599,11 +607,8 @@ class GSIRequestHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-type', 'text/html; charset=utf-8')
             self.end_headers()
-            
-            # Bulletproof file locator
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            html_path = os.path.join(current_dir, "index.html")
-            
+
+            html_path = get_resource_path("index.html")
             with open(html_path, "r", encoding="utf-8") as f:
                 html = f.read()
             self.wfile.write(html.encode('utf-8'))

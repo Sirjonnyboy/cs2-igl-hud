@@ -1,8 +1,15 @@
 from datetime import datetime
 import sqlite3
 import os
+import sys
 
-DB_FILE = os.path.join(os.path.dirname(__file__), 'rounds.db')
+
+def get_app_base_dir():
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+DB_FILE = os.path.join(get_app_base_dir(), 'rounds.db')
 
 
 def write_to_log(event_type, details):

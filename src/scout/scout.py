@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import requests
 import webbrowser
@@ -8,7 +9,14 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 # ==========================================
 # 1. SETUP & CONFIGURATION
 # ==========================================
-CONFIG_FILE = os.path.join(os.path.dirname(__file__), "scout_config.json")
+
+
+def get_app_base_dir():
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+CONFIG_FILE = os.path.join(get_app_base_dir(), "scout_config.json")
 GSI_CFG_FILENAME = "gamestate_integration_python.cfg"
 GSI_CFG_CONTENT = """\"Game State Integration\"
 {
