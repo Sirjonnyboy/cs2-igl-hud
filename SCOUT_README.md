@@ -1,97 +1,45 @@
 # CS2 Scout - Player Data Forwarder
 
-Scout is a lightweight Python application that runs on each player's machine and forwards CS2 GSI (Game State Integration) data to the master IGL HUD server.
+CS2 Scout forwards CS2 GSI data from a player machine to the master IGL HUD server.
 
-## Features
+## Quick start
 
-- **Automatic Server Detection**: Remembers the master server IP and verifies connection before starting.
-- **Guided Setup**: Minimal user input required on first run.
-- **Auto-Open HUD**: Automatically opens the IGL HUD webpage once connected.
-- **Graceful Error Handling**: Clear error messages if the server is unreachable.
-- **Standalone EXE**: Can be bundled as a standalone executable for distribution.
+### Use the packaged executable
 
-## Installation
+1. Run `dist\CS2Scout.exe`.
+2. Enter the master server IP when prompted.
+3. Keep the Scout window open while playing.
 
-### For Development (Running as Python Script)
+### Run from source
 
-1. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
+```powershell
+pip install -r requirements.txt
+python Scout.py
+```
 
-2. Run Scout:
-   ```
-   python Scout.py
-   ```
+## Game State Integration config
 
-> Note: Only the server host needs to run `Main.py`. If you are not the server owner, just run `Scout.py`.
+Scout will automatically create `gamestate_integration_python.cfg` in the CS:GO cfg folder if it cannot find one.
 
-### Game State Integration config
-
-Scout checks for `gamestate_integration_python.cfg` in the CS:GO cfg folder and will create it if missing. This file should live in:
+Expected path:
 
 `C:\Steam\steamapps\common\Counter-Strike Global Offensive\game\csgo\cfg`
 
-The file contents should be:
+## Build the executable
 
-```text
-"Game State Integration"
-{
-    "uri" "http://127.0.0.1:22222"
-    "timeout" "5.0"
-    "buffer"  "0.1"
-    "throttle" "0.5"
-    "heartbeat" "60.0"
-    "data"
-    {
-        "provider"            "1"
-        "map"                 "1"
-        "round"               "1"
-        "player_id"           "1"
-        "player_state"        "1"
-        "player_weapons"      "1"
-        "player_match_stats"  "1"
-    }
-}
+```powershell
+scripts\build_scout.bat
 ```
 
-### For Distribution (Building as EXE)
+This creates `dist\CS2Scout.exe`.
 
-1. Install PyInstaller:
-   ```
-   pip install pyinstaller
-   ```
+## Notes
 
-2. Run the build script:
-   ```
-   build_scout.bat
-   ```
+- Only non-host teammates need to run Scout.
+- The HUD server must be running on the host before Scout can connect.
+- Scout stores the master server IP in `scout_config.json` next to the executable.
 
-3. The executable will be created in the `dist\` folder as `CS2Scout.exe`.
+## More information
 
-## Usage
-
-1. **First Run**: Scout will ask you to enter the master server IP address (e.g., `100.10.20.30`).
-2. **Subsequent Runs**: Scout will ask if the saved IP is still correct. Press `Y` to confirm or `N` to enter a new one.
-3. **Connection Verification**: Scout tests the connection before starting. If the master server is unreachable, you'll see a clear error message.
-4. **Auto-Open HUD**: Once connected, your web browser will automatically open the IGL HUD.
-5. **Keep Running**: Leave Scout running while playing. It silently forwards all game data to the master server.
-
-## Error Messages
-
-- **"Server IP is either wrong, or the master server has not started yet"**
-  - Check that the IP address is correct.
-  - Ensure the master server (Main.py) is running.
-  - Check your network connection.
-
-## Configuration
-
-Scout stores the master server IP in `scout_config.json` in the same directory as the executable. You can delete this file to reset the saved IP.
-
-## For Teammates
-
-Simply download and run `CS2Scout.exe`. No additional setup required!
-
----
-
-**Important**: Keep the Scout window open during gameplay. Closing it will stop data forwarding to the IGL HUD.
+- User-facing project overview: `README.md`
+- Developer and build documentation: `CONTRIBUTING.md`
