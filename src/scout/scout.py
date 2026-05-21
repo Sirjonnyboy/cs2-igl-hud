@@ -62,6 +62,7 @@ def test_connection(url, timeout=2):
         return False
 
 def find_csgo_cfg_folder():
+    # First try common Program Files locations
     for env_var in ("ProgramFiles(x86)", "ProgramFiles", "ProgramW6432"):
         root = os.environ.get(env_var)
         if not root:
@@ -69,6 +70,33 @@ def find_csgo_cfg_folder():
         candidate = os.path.join(root, "Steam", "steamapps", "common", "Counter-Strike Global Offensive", "game", "csgo", "cfg")
         if os.path.isdir(candidate):
             return candidate
+
+    # Try to detect which drive contains Steam (user may have Steam on D:, E:, etc.)
+    def get_possible_steam_roots(drive):
+        # Common Steam install roots on a given drive
+        return [
+            os.path.join(drive + ':', 'Program Files (x86)', 'Steam'),
+            os.path.join(drive + ':', 'Program Files', 'Steam'),
+            os.path.join(drive + ':', 'Steam'),
+            os.path.join(drive + ':', 'Games', 'Steam'),
+        ]
+
+    def drive_has_steam(drive):
+        for root in get_possible_steam_roots(drive):
+            if os.path.isdir(os.path.join(root, 'steamapps')):
+                return True
+        return False
+
+    # Check all local drive letters for Steam
+    for letter in [chr(c) for c in range(ord('C'), ord('Z') + 1)]:
+        try:
+            if drive_has_steam(letter):
+                candidate = os.path.join(letter + ':', 'Steam', 'steamapps', 'common', 'Counter-Strike Global Offensive', 'game', 'csgo', 'cfg')
+                if os.path.isdir(candidate):
+                    return candidate
+        except Exception:
+            continue
+
     return None
 
 
