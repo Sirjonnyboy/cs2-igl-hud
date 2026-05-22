@@ -6,10 +6,13 @@ echo CS2 IGL HUD - EXE BUILDER
 echo ========================================
 
 echo.
+REM Ensure we run from repository root so relative paths resolve correctly
+SET SCRIPT_DIR=%~dp0
+
 echo [*] Locating Python executable...
 SET PYTHON=python
-IF EXIST "%~dp0\..\.venv\Scripts\python.exe" (
-    SET "PYTHON=%~dp0\..\.venv\Scripts\python.exe"
+IF EXIST "%SCRIPT_DIR%..\.venv\Scripts\python.exe" (
+    SET "PYTHON=%SCRIPT_DIR%..\.venv\Scripts\python.exe"
     echo [+] Using virtualenv python: "%PYTHON%"
 ) ELSE (
     echo [+] Using system python: "%PYTHON%"
@@ -19,13 +22,13 @@ echo [*] Checking if PyInstaller is installed (using %PYTHON%)...
 "%PYTHON%" -m pip show pyinstaller >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
     echo [!] PyInstaller not found. Installing via %PYTHON% -m pip...
+    "%PYTHON%" -m pip install pyinstaller
 ) else (
     echo [+] PyInstaller found.
 )
- 
-) else (
-    echo [+] PyInstaller found.
-)
+
+echo [*] Installing required dependencies from requirements.txt...
+"%PYTHON%" -m pip install -r "%SCRIPT_DIR%..\requirements.txt"
 
 echo.
 echo [*] Building IGLHUD.exe...

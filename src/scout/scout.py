@@ -1,7 +1,10 @@
 import os
 import sys
 import json
-import requests
+try:
+    import requests
+except ImportError:
+    requests = None
 import webbrowser
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -55,6 +58,10 @@ def save_ip(ip):
 
 def test_connection(url, timeout=2):
     """Test if the master server is reachable."""
+    if requests is None:
+        print(" [!] Missing required package: requests")
+        print(" [!] Install dependencies or rebuild the executable with requests available.")
+        return False
     try:
         response = requests.get(f"{url}/data", timeout=timeout)
         return response.status_code == 200
@@ -104,6 +111,31 @@ def prompt_for_cfg_folder():
     print(" [!] Could not locate the CS:GO cfg folder automatically.")
     print(" [!] If you know the CS:GO folder path, enter it below.")
     print(" [!] Example: C:\\Steam\\steamapps\\common\\Counter-Strike Global Offensive\\game\\csgo\\cfg")
+
+    # Offer a quick drive-based lookup first
+    def list_local_drives():
+        drives = []
+        for letter in [chr(c) for c in range(ord('C'), ord('Z') + 1)]:
+            root = f"{letter}:\\"
+            if os.path.isdir(root):
+                drives.append(letter)
+        return drives
+
+    drives = list_local_drives()
+    if drives:
+        print(f" [*] Detected local drives: {' '.join(drives)}")
+        drive_choice = input(" > If you know the drive letter where Steam is installed, enter it (e.g., D) or press Enter to skip: ").strip().upper()
+        if drive_choice:
+            if len(drive_choice) == 1 and drive_choice in drives:
+                candidate = os.path.join(drive_choice + ':', 'Steam', 'steamapps', 'common', 'Counter-Strike Global Offensive', 'game', 'csgo', 'cfg')
+                if os.path.isdir(candidate):
+                    print(f" [*] Found CFG folder on drive {drive_choice}: {candidate}")
+                    return candidate
+                else:
+                    print(f" [!] No CS2 cfg found on drive {drive_choice}. You can enter the full path below.")
+            else:
+                print(' [!] Invalid drive selection, falling back to manual path input.')
+
     folder = input(" > CS:GO cfg folder path (leave blank to skip): ").strip()
     if not folder:
         return None
@@ -114,20 +146,23 @@ def prompt_for_cfg_folder():
     return None
 
 
-def ensure_gsi_cfg_exists():
+def ensure_gsi_cfg_exists(ask_if_missing=True):
+    """Ensure the CS2 GSI cfg exists. If ask_if_missing is False, don't prompt the user."""
     if os.name != "nt":
-        return
+        return None
 
     cfg_folder = find_csgo_cfg_folder()
-    if not cfg_folder:
+    if not cfg_folder and ask_if_missing:
         cfg_folder = prompt_for_cfg_folder()
         if not cfg_folder:
-            return
+            return None
+    elif not cfg_folder:
+        return None
 
     cfg_path = os.path.join(cfg_folder, GSI_CFG_FILENAME)
     if os.path.isfile(cfg_path):
         print(f" [*] Found existing GSI config: {cfg_path}")
-        return
+        return cfg_path
 
     txt_path = os.path.join(cfg_folder, os.path.splitext(GSI_CFG_FILENAME)[0] + ".txt")
     if os.path.isfile(txt_path):
@@ -137,50 +172,51 @@ def ensure_gsi_cfg_exists():
         with open(cfg_path, "w", encoding="utf-8") as f:
             f.write(GSI_CFG_CONTENT)
         print(f" [+] Created GSI config: {cfg_path}")
+        return cfg_path
     except Exception as e:
         print(f" [!] Could not create GSI config: {e}")
+        return None
 
 
-def setup_networking():
+def setup_networking(master_ip=None, interactive=True):
+    """Setup master server networking. If master_ip provided, use it. If interactive is False and master_ip is None, return False."""
     global MASTER_SERVER_URL
-    os.system('cls' if os.name == 'nt' else 'clear')
-    
-    print("============================================================")
-    print(" 🕵️ CS2 SCOUT INITIALIZATION ")
-    print("============================================================")
-    
-    saved_ip = load_saved_ip()
-    target_ip = ""
-    
-    if saved_ip:
-        print(f" > Saved IGL IP Address: {saved_ip}")
-        choice = input(" > Is this IP still correct? (Y/N): ").strip().lower()
-        
-        if choice == 'y' or choice == '':
-            target_ip = saved_ip
-        else:
-            saved_ip = "" # Force them to type a new one
-            print("------------------------------------------------------------")
-            
-    if not saved_ip:
-        while True:
-            print(" [!] We need your Master Server IP Address.")
-            new_ip = input(" > Enter IP (e.g., 100.10.20.30): ").strip()
-            
-            if new_ip:
-                # Foolproof cleanup: Just in case they copy/paste the "http://" or port by accident
-                new_ip = new_ip.replace("http://", "").replace("https://", "").replace(":22222", "").replace("/", "")
-                target_ip = new_ip
-                save_ip(target_ip)
-                print(f"\n [+] IP Successfully Saved: {target_ip}")
-                break
-            else:
-                print(" [!] You cannot leave this blank. Please try again.")
 
-    # Build the final URL that the script will use to send data
+    if master_ip:
+        target_ip = master_ip
+        save_ip(target_ip)
+    else:
+        saved_ip = load_saved_ip()
+        if saved_ip:
+            if not interactive:
+                target_ip = saved_ip
+            else:
+                print(f" > Saved IGL IP Address: {saved_ip}")
+                choice = input(" > Is this IP still correct? (Y/N): ").strip().lower()
+                if choice == 'y' or choice == '':
+                    target_ip = saved_ip
+                else:
+                    saved_ip = ""
+        if not master_ip and (not saved_ip or saved_ip == ""):
+            if not interactive:
+                return False
+            while True:
+                print(" [!] We need your Master Server IP Address.")
+                new_ip = input(" > Enter IP (e.g., 100.10.20.30): ").strip()
+                if new_ip:
+                    new_ip = new_ip.replace("http://", "").replace("https://", "").replace(":22222", "").replace("/", "")
+                    target_ip = new_ip
+                    save_ip(target_ip)
+                    print(f"\n [+] IP Successfully Saved: {target_ip}")
+                    break
+                else:
+                    print(" [!] You cannot leave this blank. Please try again.")
+
     MASTER_SERVER_URL = f"http://{target_ip}:22222"
-    
-    # Test connection to master server
+
+    if not interactive:
+        return test_connection(MASTER_SERVER_URL)
+
     print("\n [*] Testing connection to master server...")
     if test_connection(MASTER_SERVER_URL):
         print(" [+] Successfully connected to master server!")
@@ -209,20 +245,28 @@ class GSIForwarder(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/html')
         self.end_headers()
 
+        if requests is None:
+            return
+
         try:
             requests.post(MASTER_SERVER_URL, json=payload, timeout=0.5)
         except requests.exceptions.RequestException:
             pass 
 
-def run_scout():
-    ensure_gsi_cfg_exists()
-    if not setup_networking():
+def run_scout(master_ip=None, interactive=True, open_browser=True):
+    if requests is None:
+        print(" [!] Cannot run Scout: missing dependency 'requests'.")
+        print(" [!] Install requirements via 'pip install -r requirements.txt' or rebuild the executable with requests available.")
+        return
+
+    ensure_gsi_cfg_exists(ask_if_missing=interactive)
+    if not setup_networking(master_ip=master_ip, interactive=interactive):
         # Connection failed
         return
-    
+
     server_address = ('127.0.0.1', 22222)
     httpd = HTTPServer(server_address, GSIForwarder)
-    
+
     os.system('cls' if os.name == 'nt' else 'clear')
     print("============================================================")
     print(" 🕵️ CS2 SCOUT SCRIPT ACTIVE! ")
@@ -233,17 +277,18 @@ def run_scout():
     print("------------------------------------------------------------")
     print(" DO NOT CLOSE THIS WINDOW WHILE PLAYING!")
     print("============================================================\n")
-    
-    # Auto-open the master server HUD webpage after a short delay
-    try:
-        print(" [*] Opening IGL HUD webpage in your browser...")
-        time.sleep(1)
-        webbrowser.open(MASTER_SERVER_URL)
-        print(" [+] Webpage opened!")
-    except Exception as e:
-        print(f" [!] Could not open webpage automatically: {e}")
-        print(f" [!] Please visit manually: {MASTER_SERVER_URL}")
-    
+
+    # Auto-open the master server HUD webpage after a short delay (interactive only by default)
+    if open_browser and interactive:
+        try:
+            print(" [*] Opening IGL HUD webpage in your browser...")
+            time.sleep(1)
+            webbrowser.open(MASTER_SERVER_URL)
+            print(" [+] Webpage opened!")
+        except Exception as e:
+            print(f" [!] Could not open webpage automatically: {e}")
+            print(f" [!] Please visit manually: {MASTER_SERVER_URL}")
+
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
